@@ -1,0 +1,22 @@
+1. Change default SSH Ports 22 to another uncommon port.
+E.g.
+Port 2233
+
+2. Disable Root Login
+PermitRootLogin no
+
+3. Only allowed specific user or group to ssh
+e.g.
+AllowGroups sshlogin
+AllowUsers sshuser
+
+4. Allow key based access only
+a. Disabling Password Authentication
+PasswordAuthentication no
+b. Generate ssh key pairs and import to the user
+ssh-keygen -t rsa -b 4096
+
+c. Copy the public key to the remote user folder ~/.ssh/authorized_keys
+
+d. use private key for ssh login
+e.g. ssh -i <private-key> <username@host> -p <port>

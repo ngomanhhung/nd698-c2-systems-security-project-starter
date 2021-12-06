@@ -1,12 +1,92 @@
 # Provide the backdoor entries created by the nation state attackers. 
 
 # Rouge Username
+darklord
 
+Log:
+Sep 22 10:54:28 ubuntu-VirtualBox groupadd[2967]: group added to /etc/group: name=darklord, GID=1001
+Sep 22 10:54:28 ubuntu-VirtualBox groupadd[2967]: group added to /etc/gshadow: name=darklord
+Sep 22 10:54:28 ubuntu-VirtualBox groupadd[2967]: new group: name=darklord, GID=1001
+Sep 22 10:54:28 ubuntu-VirtualBox useradd[2971]: new user: name=darklord, UID=1001, GID=1001, home=/home/darklord, shell=/bin/bash
+Sep 22 10:54:34 ubuntu-VirtualBox passwd[2978]: pam_unix(passwd:chauthtok): password changed for darklord
+Sep 22 10:54:34 ubuntu-VirtualBox passwd[2978]: gkr-pam: couldn't update the login keyring password: no old password was entered
+Sep 22 10:54:36 ubuntu-VirtualBox chfn[3045]: changed user 'darklord' information
 
 # Backdoor process name
+remotesec
+
+Justification:
+a. use ps and netstat to identify the suspicous process
+From the two commands below, we notice a suspicious process run on a high port number 56565
+ubuntu@ubuntu-VirtualBox:~$ ps aux |grep root
+....
+root       948  0.0  0.0   3980   572 ?        Ss   20:02   0:00 /usr/sbin/irqbalance
+root       950  0.0  0.0   2268   488 ?        SN   20:02   0:00 sh
+root       953 39.8  0.0   2592   280 ?        RN   20:02  72:54 /tmp/remotesec -k -l 56565
+root       963  0.0  0.0   2196   508 ?        Ss   20:02   0:00 acpid -c /etc/acpi/events -s /var/run/acpid.socket
+root       964  0.0  0.0  36784  3580 ?        Ssl  20:02   0:00 lightdm
+....
 
 
 # Backdoor port number the above process is listening on
+56565
 
 
+
+ubuntu@ubuntu-VirtualBox:~$ netstat -aon -t tcp
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       Timer
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      off (0.00/0/0)
+tcp        0      0 127.0.1.1:53            0.0.0.0:*               LISTEN      off (0.00/0/0)
+tcp        0      0 0.0.0.0:56565           0.0.0.0:*               LISTEN      off (0.00/0/0)
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      off (0.00/0/0)
+......
+
+# Custom yara rule to scan for the suspicious process
+From the result of the scan, the remotesec process has been created and run from /etc/darklord.sh and is locateable in /root, /etc
+
+Rule:
+rule unknown_threat{
+        meta:
+                author = "Manh Hung"
+                date = "05 Dec 2021"
+        strings:
+                $name = "remotesec"
+        condition:
+                any of them
+}
+
+Result:
+-------------------------------------------------------------------------------
+
+/root/.bash_history: YARA.unknown_threat.UNOFFICIAL FOUND
+/root/remotesec: YARA.unknown_threat.UNOFFICIAL FOUND
+/usr/lib/python2.7/dist-packages/twisted/spread/pb.py: YARA.unknown_threat.UNOFFICIAL FOUND
+/usr/lib/firefox/omni.ja: YARA.unknown_threat.UNOFFICIAL FOUND
+/var/ossec/queue/syscheck/syscheck: YARA.unknown_threat.UNOFFICIAL FOUND
+/var/log/auth.log.1: YARA.unknown_threat.UNOFFICIAL FOUND
+/var/log/upstart/ureadahead.log.1.gz: YARA.unknown_threat.UNOFFICIAL FOUND
+/var/lib/mlocate/mlocate.db: YARA.unknown_threat.UNOFFICIAL FOUND
+/etc/darklord.sh: YARA.unknown_threat.UNOFFICIAL FOUND
+/etc/remotesec: YARA.unknown_threat.UNOFFICIAL FOUND
+/home/ubuntu/.bash_history: YARA.unknown_threat.UNOFFICIAL FOUND
+/home/ubuntu/clamlog/unknown_process.txt: YARA.unknown_threat.UNOFFICIAL FOUND
+/home/ubuntu/clamlog/unknown_process.yara: YARA.unknown_threat.UNOFFICIAL FOUND
+
+----------- SCAN SUMMARY -----------
+Known viruses: 1
+Engine version: 0.100.3
+Scanned directories: 20438
+Scanned files: 105812
+Infected files: 13
+Data scanned: 3528.49 MB
+Data read: 3815.77 MB (ratio 0.92:1)
+Time: 81.846 sec (1 m 21 s)
+
+
+# Kill suspicious process
+sudo kill -9 953
+
+# Delete rouge user
+sudo userdel darklord
 

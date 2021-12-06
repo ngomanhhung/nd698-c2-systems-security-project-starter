@@ -2,10 +2,12 @@
 
 
 # Apache Version
-
+Apache/2.4.7
 
 
 # Configuration file change(Hint: the change has to be made in /etc/apache2/conf-enabled/security.conf)
 
-
-
+To hide the apache2 version:
+1. Edit /etc/apache2/conf-available/security.conf
+2. Change "ServerTokens OS" to "ServerTokens Prod" 
+3. Restart apache2 service
